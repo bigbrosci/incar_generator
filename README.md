@@ -150,3 +150,4 @@ This interface is part of the Q-robot project.
 ## Support
 
 For issues or questions about the INCAR Generator interface, refer to the Q-robot documentation or contact the development team.
+# incar_generator
