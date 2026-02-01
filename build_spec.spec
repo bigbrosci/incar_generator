@@ -20,7 +20,7 @@ a = Analysis(
     ],
     hookspath=[],
     runtime_hooks=[],
-    excludedimports=[],
+    excludedimports=['PyQt5', 'PySide6'],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
