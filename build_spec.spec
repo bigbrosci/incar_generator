@@ -16,6 +16,7 @@ a = Analysis(
         'flask',
         'werkzeug',
         'jinja2',
+        'incar_core',
     ],
     hookspath=[],
     runtime_hooks=[],
