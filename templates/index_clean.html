@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q-robot INCAR Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0099cc 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header p {
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .section h2 {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #0099cc;
+        }
+        
+        .task-button {
+            display: inline-block;
+            padding: 8px 12px;
+            margin: 4px;
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9em;
+        }
+        
+        .task-button:hover {
+            background: #0099cc;
+            color: white;
+            border-color: #0099cc;
+        }
+        
+        .task-button.selected {
+            background: #0099cc;
+            color: white;
+            border-color: #0099cc;
+        }
+        
+        .param-checkbox {
+            display: block;
+            padding: 8px;
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+        
+        .textarea {
+            width: 100%;
+            height: 300px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            resize: vertical;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #0099cc;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0077a3;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: #138496;
+        }
+        
+        .loading {
+            color: #999;
+            font-style: italic;
+            padding: 10px;
+        }
+        
+        .error {
+            color: #dc3545;
+            padding: 10px;
+            background: #f8d7da;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 900px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Q-robot INCAR Generator</h1>
+            <p>Create VASP INCAR files with an intuitive interface</p>
+        </div>
+        
+        <div class="content">
+            <!-- Left Panel -->
+            <div class="panel">
+                <div class="section">
+                    <h2>📋 Calculation Tasks</h2>
+                    <div id="taskContainer" class="loading">Loading tasks...</div>
+                </div>
+                
+                <div class="section">
+                    <h2>⚙️ Standard Parameters</h2>
+                    <div id="paramContainer" class="loading">Loading parameters...</div>
+                </div>
+            </div>
+            
+            <!-- Right Panel -->
+            <div class="panel">
+                <div class="section">
+                    <h2>📝 INCAR Preview</h2>
+                    <textarea id="incarPreview" class="textarea" placeholder="Your INCAR content will appear here..."></textarea>
+                </div>
+                
+                <div class="section">
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="generateIncar()">Generate</button>
+                        <button class="btn btn-success" onclick="downloadIncar()">Download</button>
+                        <button class="btn btn-info" onclick="copyIncar()">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedTasks = [];
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, initializing...');
+            loadTasks();
+            loadParameters();
+        });
+        
+        function loadTasks() {
+            console.log('Loading tasks...');
+            fetch('/api/task-categories')
+                .then(response => {
+                    console.log('Task response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Tasks loaded:', data);
+                    let html = '';
+                    data.categories.forEach(category => {
+                        html += '<div style="margin-bottom: 15px;">';
+                        html += '<strong>' + category.name + ':</strong><br>';
+                        Object.entries(category.tasks).forEach(([key, task]) => {
+                            const taskName = task.display || key;
+                            html += '<button class="task-button" onclick="selectTask(\'' + taskName + '\')">' + taskName + '</button>';
+                        });
+                        html += '</div>';
+                    });
+                    document.getElementById('taskContainer').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading tasks:', error);
+                    document.getElementById('taskContainer').innerHTML = '<div class="error">Error loading tasks: ' + error.message + '</div>';
+                });
+        }
+        
+        function loadParameters() {
+            console.log('Loading parameters...');
+            fetch('/api/standard-params')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Parameters loaded');
+                    let html = '';
+                    Object.entries(data.standard).forEach(([section, params]) => {
+                        html += '<label class="param-checkbox"><input type="checkbox"> ' + section.replace('d_', '') + '</label>';
+                    });
+                    document.getElementById('paramContainer').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading parameters:', error);
+                    document.getElementById('paramContainer').innerHTML = '<div class="error">Error loading parameters</div>';
+                });
+        }
+        
+        function selectTask(taskName) {
+            console.log('Selected task:', taskName);
+            if (!selectedTasks.includes(taskName)) {
+                selectedTasks.push(taskName);
+            }
+            // Visual feedback
+            event.target.classList.add('selected');
+            generateIncar();
+        }
+        
+        function generateIncar() {
+            console.log('Generating INCAR with tasks:', selectedTasks);
+            const data = {
+                tasks: selectedTasks,
+                custom_params: {},
+                include_sections: {}
+            };
+            
+            fetch('/api/generate-incar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('INCAR generated');
+                    document.getElementById('incarPreview').value = data.incar || 'Error generating INCAR';
+                })
+                .catch(error => {
+                    console.error('Error generating INCAR:', error);
+                });
+        }
+        
+        function downloadIncar() {
+            const content = document.getElementById('incarPreview').value;
+            if (!content) {
+                alert('Generate INCAR first');
+                return;
+            }
+            const blob = new Blob([content], {type: 'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'INCAR';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function copyIncar() {
+            const textarea = document.getElementById('incarPreview');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Copied to clipboard!');
+        }
+        
+        console.log('Script loaded');
+    </script>
+</body>
+</html>

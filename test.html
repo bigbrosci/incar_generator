@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flask Test</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f0f0f0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 { color: #0099cc; }
+        .info { background: #e8f4f8; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✓ Q-robot INCAR Generator</h1>
+        <p>Flask app is running correctly!</p>
+        
+        <div class="info">
+            <h3>Testing API Endpoints:</h3>
+            <p id="status">Loading...</p>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+    
+    <script>
+        console.log('Test page loaded');
+        
+        // Test API endpoint
+        fetch('/api/task-categories')
+            .then(r => {
+                console.log('Response status:', r.status);
+                return r.json();
+            })
+            .then(data => {
+                console.log('Data received:', data);
+                document.getElementById('status').innerHTML = '✓ API working! Categories: ' + data.categories.length;
+                
+                let html = '<h3>Task Categories:</h3><ul>';
+                data.categories.forEach(cat => {
+                    html += '<li><strong>' + cat.name + ':</strong> ' + Object.keys(cat.tasks).length + ' tasks</li>';
+                });
+                html += '</ul>';
+                document.getElementById('results').innerHTML = html;
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                document.getElementById('status').innerHTML = '✗ Error: ' + err.message;
+            });
+    </script>
+</body>
+</html>
